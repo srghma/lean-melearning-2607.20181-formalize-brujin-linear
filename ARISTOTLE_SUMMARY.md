@@ -1,3 +1,70 @@
+# Summary of changes for run a78c41a7-2bd8-4286-b5e4-9e4cbf2055ff
+I added a fourth toy grammar. The earlier toys (`Toy/Ty.lean`, `Term.lean`, `Anf.lean`, `Open.lean` and their example files) mostly copied your *term* file. This one copies two ideas from your *type* file that none of them had: datatypes that are declared once and referred to by a de Bruijn name, and a delay that cannot be nested. It is in three short files under `RequestProject/Toy/`. They build with no `sorry` and no warnings. The main theorems use only Lean's standard axioms (`propext`, `Quot.sound`, plus `Classical.choice` for the linearity result).
+
+**`Nominal.lean`: types**
+```
+NTy n d ::= base b | fn NTy NTy
+          | data r             -- r : Fin n, a declared datatype by de Bruijn name
+          | lazy (NTy n false) -- a delay, only at index d = true
+```
+- **Delays:** as in your file, the second index is optional (`NTy n` means `NTy n true`), and a delay holds an `NTy n false`, so a delay inside a delay cannot be written (`lazy_not_in_lazy`). There are `relax`, `undelay` and `isDelay`, and `mkLazy` reads `Unit → Unit → τ` as a single delay (`mkLazy_mkLazy`, `mkLazy_relax`).
+- **Renaming:** `map`, `map_id` and `map_map`, as in your file. `weaken` renames with `Fin.succ` when a new datatype is declared.
+- **Link to the paper:** `toTy` translates a toy type to one of the paper's simple types, with the leaves and datatype names as atoms. It forgets the delay, since a delay stands for the value it holds (`toTy_mkLazy`, `toTy_relax`, `toTy_map`).
+
+**`NominalTerm.lean`: terms**
+```
+NNeu ::= var | const c | app NNeu NNf | force NNeu
+NNf  ::= neu NNeu | lam NNf | delay NNf
+```
+Each term is indexed by the paper's judgement `{Γ} t : α {Δ}`: the variables available before, the type, and the variables left over. The constructors of a datatype are constants. `force` only accepts a neutral term, so a forced literal delay `force (delay t)` cannot be written; this is the toy version of your rule that a force needs an open delay. Proved results:
+- `NNf.sound`: once delays are removed from the term, every normal form is accepted by the paper's typing system (Figure 4).
+- `NNf.quasiLinear`: each variable is used at most once, and each λ uses its parameter exactly once.
+- `NNf.normal`: a normal form contains no β-redex.
+- `NProgram.linear`: every closed program is a linear λ-term, simply typed with no free variables.
+
+**`NominalExamples.lean`**
+One declared datatype, `data 0`, stands for lists of naturals. Two programs, each with an `rfl` check of what it translates to:
+- `consLazy`: `λx. λxs. delay (cons x xs)`.
+- `forceCons`: `λt. cons zero (force t)`.
+
+It also checks that both programs are linear, that `mkLazy (mkLazy natList)` is a single delay, and that weakening renames `data 0` to `data 1`.
+
+**Simplifications:** datatypes are opaque names whose constructors are constants. There is no signature giving their unfoldings, and no records, unions, enums or thunks. There is one kind of delay, not two. I added the new type grammar and its two groups of results to the Properties table.
+
+# Summary of changes for run 417bfb5a-bb89-4df1-a552-ea5a82c6b711
+I added a third toy grammar, `RequestProject/Toy/Open.lean`, with examples in `RequestProject/Toy/OpenExamples.lean`. It copies the central idea of your normal-form `Term` file: split *known* from *unknown* values, track whether each expression is open or closed, and require every elimination to have an open operand. Both files build with no `sorry`. The main theorems use only Lean's standard axioms (`propext`, `Quot.sound`, and `Classical.choice` for the linearity result).
+
+The earlier toy files (`Toy/Ty.lean`, `Term.lean`, `Anf.lean`, `Examples.lean`) are unchanged.
+
+**The grammar.** Like the earlier toys, each class is indexed by the paper's judgement `{Γ} t : α {Δ}` (the variables available before and after), plus an open/closed flag `o : Bool`:
+```
+Neu   Γ α Δ    ::= var x | app Neu (PExpr o)
+                 | extern c (Args o) (o = open)   -- full call of a constant, ≥1 open argument
+PExpr Γ α Δ o  ::= neu Neu        -- open
+                 | lit c          -- closed (a constant of base type)
+                 | lamC PExpr     -- closed: the body uses only its own parameter
+                 | lamO PExpr (Γ ≠ Δ)   -- open: comes with a proof that it uses an outer unknown
+Args  Γ σs Δ o ::= nil | cons PExpr Args   -- open iff some argument is
+```
+`lamC`/`lamO` play the role of your `Body.closed`/`Body.opened`, and `extern`'s condition matches your `extern e args (h : o = some ℓ)`.
+
+**Proved results:**
+- **The open/closed flag is exact** (`PExpr.closed_iff`): an expression is closed exactly when it uses no unknown, i.e. `Γ = Δ`. The proof uses the paper's Lemma `subeq` and a new antisymmetry lemma for `⊑` (`FEnv.le_antisymm`).
+- **Every neutral term uses an unknown** (`Neu.uses_unknown`). So every application uses an unknown (`PExpr.app_uses_unknown`), and a closed expression is a literal or a λ (`PExpr.closed_isValue`).
+- **A closed program is closed** (`OProgram.closed`): it is a literal or a λ, never a computation. This is the toy version of your `closed_isValue`.
+- **Results carried over from the first toy grammar:** each expression is typed by the paper's system with the same environments (`PExpr.sound`). It uses each variable at most once and each λ-parameter exactly once (`PExpr.quasiLinear`), and contains no β-redex (`PExpr.normal`). Every closed program is a linear λ-term, simply typed with no free variables (`OProgram.linear`).
+
+**Examples** (`OpenExamples.lean`):
+- `succO`: `λx. add x 1`, a closed λ whose call is stuck on the unknown `x`.
+- `applyO`: `λf. λx. f x`. The inner λ is open because it uses `f`; the outer λ is closed.
+- `no_add_one_two`: `add 1 2`, a redex between known values, cannot be written as a program.
+
+The two examples have `rfl` checks of what they translate to in the paper's terms.
+
+**Simplifications:** the open/closed flag is a `Bool`, not a nesting level (`Option Nat`). Constants of function type can only be fully applied, never passed around as values. There are no `let`s, join points, records, unions or delays.
+
+The Properties table now lists the new grammar and its two main results.
+
 # Summary of changes for run dcabc14b-0e68-4f6a-a46d-8dbd0fc4d522
 The project already had a toy grammar in the style of your two files, from the previous session, in `RequestProject/Toy/`: `Ty.lean` (types), `Term.lean` (terms) and `Examples.lean`. I rebuilt it and it still compiles with no `sorry`. I also added a second term grammar, `RequestProject/Toy/Anf.lean`, which follows the layered structure of your `Val`/`Comp`/`Term` file more closely. It builds with no `sorry`, and its main theorems use only Lean's standard axioms.
 

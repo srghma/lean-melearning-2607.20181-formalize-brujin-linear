@@ -55,6 +55,8 @@ inductive LLTyped (τ : C → Ty A) : FEnv A → Term C → Ty A → FEnv A → 
       LLTyped τ Γ (.var i) α Δ → LLTyped τ (some β :: Γ) (.var (i + 1)) α (some β :: Δ)
   | weak₂ {Γ Δ : FEnv A} {i : ℕ} {α : Ty A} :
       LLTyped τ Γ (.var i) α Δ → LLTyped τ (none :: Γ) (.var (i + 1)) α (none :: Δ)
+  -- | weak {Γ Δ : FEnv A} {i : ℕ} {α : Ty A} (ω : QTy A) :
+  --     LLTyped τ Γ (.var i) α Δ → LLTyped τ (ω :: Γ) (.var (i + 1)) α (ω :: Δ)
   | app {Γ Δ Θ : FEnv A} {t u : Term C} {α β : Ty A} :
       LLTyped τ Γ t (.arr α β) Δ → LLTyped τ Δ u α Θ → LLTyped τ Γ (.app t u) β Θ
   | abs {Γ Δ : FEnv A} {t : Term C} {α β : Ty A} :

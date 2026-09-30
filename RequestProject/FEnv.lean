@@ -19,6 +19,27 @@ The partial operations of addition and subtraction are modelled as functions ret
 
 @[expose] public section
 
+
+-- set_option pp.all false
+--
+-- variable {α : Type*} [Preorder α] (s : Set α)
+--
+-- set_option pp.notation false
+-- set_option pp.raw false
+--
+-- #reduce ({x : α | ∀ ⦃a : α⦄, a ∈ s → x ≤ a})
+
+/-- Zips two lists with a partial operation `f`.
+    Succeeds iff both lists have the exact same length and `f` succeeds at every element. -/
+def List.zipWithExactM {m : Type u → Type u} [Monad m] [Alternative m]
+    {α β γ : Type u} (f : α → β → m γ) : List α → List β → m (List γ)
+  | [], [] => pure []
+  | a :: as, b :: bs => do
+    let c ← f a b
+    let cs ← List.zipWithExactM f as bs
+    pure (c :: cs)
+  | _, _ => failure
+
 namespace LinearDB
 
 variable {A : Type*}
@@ -55,22 +76,11 @@ end QTy
 
 namespace FEnv
 
-/-- Componentwise lifting of a partial binary operation on quasi-types to fragmentary
-environments: defined iff both environments have the same length and the operation is defined
-at every component. -/
-def zipOp (f : QTy A → QTy A → Option (QTy A)) : FEnv A → FEnv A → Option (FEnv A)
-  | [], [] => some []
-  | a :: Γ, b :: Δ =>
-    match f a b, zipOp f Γ Δ with
-    | some c, some Θ => some (c :: Θ)
-    | _, _ => none
-  | _, _ => none
-
 /-- Partial addition of fragmentary environments (componentwise). -/
-def add (Γ Δ : FEnv A) : Option (FEnv A) := zipOp QTy.add Γ Δ
+def add (Γ Δ : FEnv A) : Option (FEnv A) := List.zipWithExactM QTy.add Γ Δ
 
 /-- Partial subtraction of fragmentary environments (componentwise). -/
-def sub [DecidableEq A] (Γ Δ : FEnv A) : Option (FEnv A) := zipOp QTy.sub Γ Δ
+def sub [DecidableEq A] (Γ Δ : FEnv A) : Option (FEnv A) := List.zipWithExactM QTy.sub Γ Δ
 
 /-- The order on fragmentary environments: `Γ ⊑ Δ` iff `|Γ| = |Δ|` and `Γ(i) ⊑ Δ(i)` for all
 `i`. -/
