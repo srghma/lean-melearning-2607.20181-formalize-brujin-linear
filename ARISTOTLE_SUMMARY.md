@@ -1,3 +1,37 @@
+# Summary of changes for run f259818d-b495-4f41-866b-f6cecb599dde
+I added ToyLinearLogic and ToyLinearLogic2 in four new files under `RequestProject/Toy/`. The whole project builds with no `sorry` and no warnings. The main theorems use only Lean's standard axioms. The earlier files are unchanged.
+
+**How I read "using ANFtyped".** I took it to mean the style of your typed A-normal grammar (`Toy/Anf.lean`): a derivation is a typed proof term, an inductive family indexed by what it proves, with one constructor per rule. I also connected the two: `Anf.lean` statements translate into proofs in both new calculi. If you meant something else, let me know.
+
+**`LinearLogic.lean`: ToyLinearLogic**
+- `Fml` has atoms, `A^⊥`, `⊗`, `⅋`, `&`, `⊕`, `!` and `?`. `CLL Γ Ψ` is the type of derivations of `Γ ⊢ Ψ`, with one constructor for each rule on your page: initial sequent, cut, both exchanges, and the left and right rules for `⊥`, `⊗`, `⅋`, `&`, `⊕`, `!` and `?`, including `! R` and `? L`. Sequences are lists read left to right, so `Γ, A` is `Γ ++ [A]`.
+- `Derivable.perm`: exchange works for any reordering of either side.
+- `A ⊸ B` is defined as `A^⊥ ⅋ B`, and its right and left rules are derived (`lolliR`, `lolliL`). There are small example derivations: `A⊗B ⊢ B⊗A`, `A ⊢ A^⊥^⊥`, `⊢ A ⅋ A^⊥`, `!A ⊢ !A⊗!A` and `!A ⊢ !!A`.
+- **Typed A-normal terms are proofs** (`Stmt.toCLL`, `AProgram.toCLL`). A statement `{Γ} s : α {Δ}` gives a derivation of `!Θ, used ⊢ ⟦α⟧`, where `used` lists the variables it consumed and `α → β` is read as `⟦α⟧ ⊸ ⟦β⟧`.
+  - **Why the extra `!Θ`:** constants can be used many times, and a base-type literal such as `1 : nat` cannot be proved from nothing. So the constants enter as reusable `!`-hypotheses.
+  - `AProgram.toCLL_of_list` takes `Θ` to be the constants' own types. `AProgram.toCLL_of_isEmpty` gives `⊢ ⟦α⟧` when there are no constants.
+
+**`LinearLogic2.lean`: ToyLinearLogic2 (Hodas–Miller style)**
+- `IO Γ Δ` is the type of derivations `{Γ} t {Δ}`. The environments are lists of slots holding signed formulas: `L A` is a hypothesis, `R A` a conclusion, and an empty slot is a formula already used, like the paper's `⊥`.
+- `Proves Γ A Δ` is the judgement `{Γ} t : A {Δ}`.
+- **How the rules work:**
+  - Each rule picks its main formula by position, like the paper's variable rules. It adds the new formulas as slots that must be empty by the end of the premise, like rule (abs).
+  - Cut, `R⊗` and `L⅋` pass the environment from the first premise to the second, like rule (app). `R&` and `L⊕` run both premises between the same environments.
+  - `! R` and `? L` require everything else they use to be a `!`-hypothesis or a `?`-conclusion.
+  - There is no exchange rule, since picking by position already allows any order.
+- **Proved results:**
+  - Soundness (`IO.sound`): an `IO` derivation gives a ToyLinearLogic derivation of the formulas it used.
+  - Completeness (`CLL.toIO`): a ToyLinearLogic derivation gives an `IO` derivation between any two environments whose used formulas are that sequent, in any order.
+  - Hence both calculi prove the same sequents (`derivable_iff_io`).
+  - `Stmt.toIO`: a statement `{Γ} s : α {Δ}` gives `{Γ, !Θ} t : ⟦α⟧ {Δ, ⊥…⊥}`, with the same environments.
+- A concrete example, `tensorCommIO`, proves `A⊗B ⊢ B⊗A` with no exchange step.
+
+**Supporting and example files**
+- `Resource.lean` has the environment bookkeeping both calculi share. Its key facts are that what gets used adds up along a chain of environments, and that any split of it can be matched by an intermediate environment.
+- `LinearLogicExamples.lean` reads `lenSuccA` from `Toy/Examples.lean` as a proof of `string ⊸ nat` in both calculi, with the six constant types as `!Θ`.
+
+The Properties table has two new definitions (`CLL`, `IO`) and three new proved properties: the A-normal translation into ToyLinearLogic, the equivalence of the two calculi, and the translation into ToyLinearLogic2.
+
 # Summary of changes for run a78c41a7-2bd8-4286-b5e4-9e4cbf2055ff
 I added a fourth toy grammar. The earlier toys (`Toy/Ty.lean`, `Term.lean`, `Anf.lean`, `Open.lean` and their example files) mostly copied your *term* file. This one copies two ideas from your *type* file that none of them had: datatypes that are declared once and referred to by a de Bruijn name, and a delay that cannot be nested. It is in three short files under `RequestProject/Toy/`. They build with no `sorry` and no warnings. The main theorems use only Lean's standard axioms (`propext`, `Quot.sound`, plus `Classical.choice` for the linearity result).
 
