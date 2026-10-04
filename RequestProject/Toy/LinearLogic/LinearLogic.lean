@@ -1,7 +1,7 @@
 module
 
-public import RequestProject.Toy.Anf
-public import RequestProject.Toy.Resource
+public import RequestProject.Toy.Terms.Anf
+public import RequestProject.Toy.LinearLogic.Resource
 
 @[expose] public section
 
@@ -14,7 +14,7 @@ The two-sided sequent calculus of classical linear logic, with exactly the rules
 specification (initial sequents, cut, the two exchanges, and the left / right rules of
 negation, `⊗`, `⅋`, `&`, `⊕`, `!` and `?`).
 
-In the style of the typed A-normal grammar (`Toy/Anf.lean`), a derivation is a **typed proof
+In the style of the typed A-normal grammar (`Toy/Terms/Anf.lean`), a derivation is a **typed proof
 term**: `CLL Γ Ψ` is the `Type` of derivations of the sequent `Γ ⊢ Ψ`, an inductive family
 indexed by its two sides, and each rule is a constructor.  A sequence `Γ, A` is the Lean list
 `Γ ++ [A]` and `A, Ψ` is `A :: Ψ`, i.e. lists are read left to right exactly as written in the
@@ -32,7 +32,7 @@ Results:
 * exchange is admissible for arbitrary permutations of either side (`Derivable.perm`);
 * linear implication `A ⊸ B := A^⊥ ⅋ B` has derived right and left rules (`lolliR`,
   `lolliL`);
-* **the typed A-normal terms are linear-logic proofs**: every statement of `Toy/Anf.lean`
+* **the typed A-normal terms are linear-logic proofs**: every statement of `Toy/Terms/Anf.lean`
   from `Γ` to `Δ` of type `α` gives a derivation of `!Θ, used ⊢ ⟦α⟧`, where `used` lists the
   types of the variables it consumed and `!Θ` are `!`-hypotheses from which the constants follow
   (`Stmt.toCLL`); a function type `α → β` is read as `⟦α⟧ ⊸ ⟦β⟧`.  In particular every closed

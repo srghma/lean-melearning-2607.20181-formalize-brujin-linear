@@ -1,6 +1,6 @@
 module
 
-public import RequestProject.Toy.Ty
+public import RequestProject.Toy.Types.Ty
 
 @[expose] public section
 

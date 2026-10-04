@@ -1,14 +1,12 @@
 module
 
-public import RequestProject.FEnv
+public import RequestProject.Sec3FragmentaryEnv.FEnv
 
 /-!
-# The three typing systems of the paper
+# The typing system for the linear λ-calculus (Section 4 of the paper)
 
-* `STTyped τ Γ t α`  — `⊢_st Γ ⊢ t : α`, the simply typed λ-calculus (Figure 2);
-* `FLLTyped τ Γ t α` — `⊢_fll Γ ⊢ t : α`, fragmentary environments with a disjointness
-  proviso (Figure 3);
-* `LLTyped τ Γ t α Δ` — `⊢_ll {Γ} t : α {Δ}`, the main typing system of the paper (Figure 4).
+* `LLTyped τ Γ t α Δ` — `⊢_ll {Γ} t : α {Δ}`, the main typing system of the paper (Figure 4);
+* `Compatible` and `Minimal` environments.
 
 Here `τ : C → Ty A` assigns a type to each constant. Recall that environments are lists whose
 head is component `0` (so the paper's `Γ, α` is `α :: Γ`).
@@ -21,30 +19,6 @@ namespace LinearDB
 open Term
 
 variable {A C : Type*}
-
-/-- The simply typed λ-calculus in de Bruijn notation (Figure 2). -/
-inductive STTyped (τ : C → Ty A) : Env A → Term C → Ty A → Prop
-  | const (Γ : Env A) (c : C) : STTyped τ Γ (.const c) (τ c)
-  | var (Γ : Env A) (α : Ty A) : STTyped τ (α :: Γ) (.var 0) α
-  | weak {Γ : Env A} {i : ℕ} {α : Ty A} (β : Ty A) :
-      STTyped τ Γ (.var i) α → STTyped τ (β :: Γ) (.var (i + 1)) α
-  | app {Γ : Env A} {t u : Term C} {α β : Ty A} :
-      STTyped τ Γ t (.arr α β) → STTyped τ Γ u α → STTyped τ Γ (.app t u) β
-  | abs {Γ : Env A} {t : Term C} {α β : Ty A} :
-      STTyped τ (α :: Γ) t β → STTyped τ Γ (.lam t) (.arr α β)
-
-/-- The typing system with fragmentary environments (Figure 3). The proviso `Γ ⋈ Δ` of
-rule (app) is expressed by the requirement that `Γ + Δ` be defined (and equal to `Θ`). -/
-inductive FLLTyped (τ : C → Ty A) : FEnv A → Term C → Ty A → Prop
-  | const (n : ℕ) (c : C) : FLLTyped τ (FEnv.minenv n) (.const c) (τ c)
-  | var (n : ℕ) (α : Ty A) : FLLTyped τ (some α :: FEnv.minenv n) (.var 0) α
-  | weak {Γ : FEnv A} {i : ℕ} {α : Ty A} :
-      FLLTyped τ Γ (.var i) α → FLLTyped τ (none :: Γ) (.var (i + 1)) α
-  | app {Γ Δ Θ : FEnv A} {t u : Term C} {α β : Ty A} :
-      FLLTyped τ Γ t (.arr α β) → FLLTyped τ Δ u α → FEnv.add Γ Δ = some Θ →
-      FLLTyped τ Θ (.app t u) β
-  | abs {Γ : FEnv A} {t : Term C} {α β : Ty A} :
-      FLLTyped τ (some α :: Γ) t β → FLLTyped τ Γ (.lam t) (.arr α β)
 
 /-- The typing system for the linear λ-calculus (Figure 4): `LLTyped τ Γ t α Δ` stands for the
 Hodas–Miller style judgement `{Γ} t : α {Δ}`. -/

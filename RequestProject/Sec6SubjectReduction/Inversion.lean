@@ -1,6 +1,7 @@
 module
 
-public import RequestProject.LL
+public import RequestProject.Sec4LinearTyping.LL
+public import RequestProject.Sec5BetaReduction.Beta
 
 /-!
 # Inversion lemmas for the `ll` typing system and auxiliary facts on environments
@@ -140,23 +141,23 @@ lemma FEnv.le_split_mid {ω : QTy A} {Γ₁ Γ₂ Δ₁ Δ₂ Ξ : FEnv A}
       obtain ⟨Ξ₂, Ξ₁, rfl, h5, h6, h7⟩ := ih h2 h4 (by simpa using hl)
       exact ⟨ξ :: Ξ₂, Ξ₁, rfl, by simp [h5], h6, h7⟩
 
-lemma FEnv.zipOp_append {f : QTy A → QTy A → Option (QTy A)} {A₁ A₂ B₁ B₂ X Y : FEnv A}
-    (h₁ : FEnv.zipOp f A₁ B₁ = some X) (h₂ : FEnv.zipOp f A₂ B₂ = some Y) :
-    FEnv.zipOp f (A₁ ++ A₂) (B₁ ++ B₂) = some (X ++ Y) := by
+lemma FEnv.List.zipWithExactM_append {f : QTy A → QTy A → Option (QTy A)} {A₁ A₂ B₁ B₂ X Y : FEnv A}
+    (h₁ : List.zipWithExactM f A₁ B₁ = some X) (h₂ : List.zipWithExactM f A₂ B₂ = some Y) :
+    List.zipWithExactM f (A₁ ++ A₂) (B₁ ++ B₂) = some (X ++ Y) := by
   induction A₁ generalizing B₁ X with
   | nil =>
-    obtain ⟨rfl, rfl⟩ := (FEnv.zipOp_nil_left_eq_some f).1 h₁
+    obtain ⟨rfl, rfl⟩ := (FEnv.List.zipWithExactM_nil_left_eq_some f).1 h₁
     simpa using h₂
   | cons a A₁ ih =>
     rcases B₁ with _ | ⟨b, B₁⟩
     · simp at h₁
-    obtain ⟨c, X', hc, hX', rfl⟩ := (FEnv.zipOp_cons_cons_eq_some f).1 h₁
-    rw [List.cons_append, List.cons_append, FEnv.zipOp_cons_cons_eq_some]
+    obtain ⟨c, X', hc, hX', rfl⟩ := (FEnv.List.zipWithExactM_cons_cons_eq_some f).1 h₁
+    rw [List.cons_append, List.cons_append, FEnv.List.zipWithExactM_cons_cons_eq_some]
     exact ⟨c, X' ++ Y, hc, ih hX', rfl⟩
 
-lemma FEnv.zipOp_append_inv {f : QTy A → QTy A → Option (QTy A)} {A₁ A₂ B₁ B₂ W : FEnv A}
-    (h : FEnv.zipOp f (A₁ ++ A₂) (B₁ ++ B₂) = some W) (hl : A₁.length = B₁.length) :
-    ∃ X Y, W = X ++ Y ∧ FEnv.zipOp f A₁ B₁ = some X ∧ FEnv.zipOp f A₂ B₂ = some Y := by
+lemma FEnv.List.zipWithExactM_append_inv {f : QTy A → QTy A → Option (QTy A)} {A₁ A₂ B₁ B₂ W : FEnv A}
+    (h : List.zipWithExactM f (A₁ ++ A₂) (B₁ ++ B₂) = some W) (hl : A₁.length = B₁.length) :
+    ∃ X Y, W = X ++ Y ∧ List.zipWithExactM f A₁ B₁ = some X ∧ List.zipWithExactM f A₂ B₂ = some Y := by
   induction A₁ generalizing B₁ W with
   | nil =>
     rcases B₁ with _ | ⟨b, B₁⟩
@@ -165,10 +166,10 @@ lemma FEnv.zipOp_append_inv {f : QTy A → QTy A → Option (QTy A)} {A₁ A₂ 
   | cons a A₁ ih =>
     rcases B₁ with _ | ⟨b, B₁⟩
     · simp at hl
-    rw [List.cons_append, List.cons_append, FEnv.zipOp_cons_cons_eq_some] at h
+    rw [List.cons_append, List.cons_append, FEnv.List.zipWithExactM_cons_cons_eq_some] at h
     obtain ⟨c, W', hc, hW', rfl⟩ := h
     obtain ⟨X, Y, rfl, hX, hY⟩ := ih hW' (by simpa using hl)
-    exact ⟨c :: X, Y, rfl, by simp [FEnv.zipOp, hc, hX], hY⟩
+    exact ⟨c :: X, Y, rfl, by simp [List.zipWithExactM, hc, hX], hY⟩
 
 /-! ### Definedness facts -/
 

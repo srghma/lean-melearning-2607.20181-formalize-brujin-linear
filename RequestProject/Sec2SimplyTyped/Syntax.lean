@@ -3,13 +3,15 @@ module
 public import Mathlib
 
 /-!
-# Syntax of the λ-calculus in de Bruijn notation (Sections 2 and 5 of the paper)
+# Syntax of the λ-calculus in de Bruijn notation (Section 2 of the paper)
 
 * simple types `Ty A` over a set `A` of atomic types;
 * λ-terms `Term C` in de Bruijn notation over a set `C` of constants (Definition 1);
 * the number of free occurrences `occ i t` of an index, the free variables `fv t`;
-* linear and quasi-linear λ-terms (Definition of linearity, conditions i–iii);
-* lifting, substitution and β-contraction / β-reduction (Section 5).
+* linear and quasi-linear λ-terms (Definition of linearity, conditions i–iii), with some
+  elementary facts about subterms of quasi-linear terms.
+
+Lifting, substitution and β-reduction (Section 5) are in `Sec5BetaReduction/Beta.lean`.
 -/
 
 @[expose] public section
@@ -64,30 +66,45 @@ def QuasiLinear (t : Term C) : Prop :=
 def Linear (t : Term C) : Prop :=
   QuasiLinear t ∧ ∀ i j : ℕ, i ∈ fv t → j < i → j ∈ fv t
 
-/-- Lifting `↑ᵏᵢ(t)`: add `k` to every index of `t` that is `≥ i` (where `i` counts the
-enclosing λ's). Written `lift t k i`. -/
-def lift : Term C → ℕ → ℕ → Term C
-  | const c, _, _ => const c
-  | var j, k, i => if j < i then var j else var (j + k)
-  | app t₁ t₂, k, i => app (lift t₁ k i) (lift t₂ k i)
-  | lam t₁, k, i => lam (lift t₁ k (i + 1))
+end Term
 
-/-- Substitution `t[i := u]` of the index `i` by the term `u` in `t`. Written `subst t i u`. -/
-def subst : Term C → ℕ → Term C → Term C
-  | const c, _, _ => const c
-  | var j, i, u => if j < i then var j else if j = i then lift u i 0 else var (j - 1)
-  | app t₁ t₂, i, u => app (subst t₁ i u) (subst t₂ i u)
-  | lam t₁, i, u => lam (subst t₁ (i + 1) u)
+/-! ### Subterms of quasi-linear terms -/
 
-/-- β-contraction `t →β u` (Definition of β-contraction). -/
-inductive Beta : Term C → Term C → Prop
-  | beta (t u : Term C) : Beta (app (lam t) u) (subst t 0 u)
-  | appL {t u : Term C} (v : Term C) : Beta t u → Beta (app t v) (app u v)
-  | appR {t u : Term C} (v : Term C) : Beta t u → Beta (app v t) (app v u)
-  | lam {t u : Term C} : Beta t u → Beta (lam t) (lam u)
+namespace Term
 
-/-- β-reduction: the reflexive, transitive closure of β-contraction. -/
-def BetaRed : Term C → Term C → Prop := Relation.ReflTransGen Beta
+variable {C : Type*}
+
+lemma occ_var (i j : ℕ) : occ i (var j : Term C) = if i = j then 1 else 0 := rfl
+
+lemma not_isSubterm_lam_var {u : Term C} {j : ℕ} : ¬ IsSubterm (lam u) (var j) := by
+  intro h; cases h
+
+lemma not_isSubterm_lam_const {u : Term C} {c : C} : ¬ IsSubterm (lam u) (const c) := by
+  intro h; cases h
+
+lemma QuasiLinear.app_left {t u : Term C} (h : QuasiLinear (app t u)) : QuasiLinear t := by
+  refine ⟨fun v hv => h.1 v (IsSubterm.appL _ hv), fun i hi => ?_⟩
+  have := h.2 i (by simp only [fv, Set.mem_setOf_eq, occ] at hi ⊢; omega)
+  simp only [fv, Set.mem_setOf_eq, occ] at hi this; omega
+
+lemma QuasiLinear.app_right {t u : Term C} (h : QuasiLinear (app t u)) : QuasiLinear u := by
+  refine ⟨fun v hv => h.1 v (IsSubterm.appR _ hv), fun i hi => ?_⟩
+  have := h.2 i (by simp only [fv, Set.mem_setOf_eq, occ] at hi ⊢; omega)
+  simp only [fv, Set.mem_setOf_eq, occ] at hi this; omega
+
+lemma QuasiLinear.occ_zero_of_lam {t : Term C} (h : QuasiLinear (lam t)) : occ 0 t = 1 :=
+  h.1 t (IsSubterm.refl _)
+
+lemma QuasiLinear.of_lam {t : Term C} (h : QuasiLinear (lam t)) : QuasiLinear t := by
+  refine ⟨fun v hv => h.1 v (IsSubterm.lam hv), fun i hi => ?_⟩
+  rcases i with _ | i
+  · exact h.occ_zero_of_lam
+  · exact h.2 i hi
+
+lemma quasiLinear_var (j : ℕ) : QuasiLinear (var j : Term C) := by
+  refine ⟨fun u hu => absurd hu not_isSubterm_lam_var, fun i hi => ?_⟩
+  simp only [fv, Set.mem_setOf_eq, occ] at hi ⊢
+  split_ifs at hi ⊢ <;> simp_all
 
 end Term
 

@@ -1,13 +1,13 @@
 module
 
-public import RequestProject.FEnv
+public import RequestProject.Sec3FragmentaryEnv.FEnv
 
 /-!
 # Algebraic properties of quasi-types and fragmentary environments
 
-Lemma `qtSimpleEq` and Lemma `envSimpleEq` (end of Section 3) and Lemma `envdefined`
-(end of Section 4) of the paper, together with the componentwise characterization of the
-operations on fragmentary environments.
+Lemma `qtSimpleEq` and Lemma `envSimpleEq` (end of Section 3 of the paper), together with the
+componentwise characterization of the operations on fragmentary environments and basic facts
+about the order `⊑`.
 -/
 
 @[expose] public section
@@ -18,50 +18,50 @@ variable {A : Type*}
 
 namespace FEnv
 
-section zipOp
+section List.zipWithExactM
 
 variable (f : QTy A → QTy A → Option (QTy A))
 
-@[simp] lemma zipOp_nil_nil : zipOp f [] [] = some [] := rfl
+@[simp] lemma List.zipWithExactM_nil_nil : List.zipWithExactM f [] [] = some [] := rfl
 
-@[simp] lemma zipOp_nil_cons (b : QTy A) (Δ : FEnv A) : zipOp f [] (b :: Δ) = none := rfl
+@[simp] lemma List.zipWithExactM_nil_cons (b : QTy A) (Δ : FEnv A) : List.zipWithExactM f [] (b :: Δ) = none := rfl
 
-@[simp] lemma zipOp_cons_nil (a : QTy A) (Γ : FEnv A) : zipOp f (a :: Γ) [] = none := rfl
+@[simp] lemma List.zipWithExactM_cons_nil (a : QTy A) (Γ : FEnv A) : List.zipWithExactM f (a :: Γ) [] = none := rfl
 
-lemma zipOp_cons_cons_eq_some {a b : QTy A} {Γ Δ Θ : FEnv A} :
-    zipOp f (a :: Γ) (b :: Δ) = some Θ ↔
-      ∃ c Θ', f a b = some c ∧ zipOp f Γ Δ = some Θ' ∧ Θ = c :: Θ' := by
-  simp only [zipOp]
-  rcases h1 : f a b with _ | c <;> rcases h2 : zipOp f Γ Δ with _ | Θ' <;> simp [eq_comm]
+lemma List.zipWithExactM_cons_cons_eq_some {a b : QTy A} {Γ Δ Θ : FEnv A} :
+    List.zipWithExactM f (a :: Γ) (b :: Δ) = some Θ ↔
+      ∃ c Θ', f a b = some c ∧ List.zipWithExactM f Γ Δ = some Θ' ∧ Θ = c :: Θ' := by
+  simp only [List.zipWithExactM]
+  rcases h1 : f a b with _ | c <;> rcases h2 : List.zipWithExactM f Γ Δ with _ | Θ' <;> simp [eq_comm]
 
-lemma zipOp_nil_left_eq_some {Δ Θ : FEnv A} :
-    zipOp f [] Δ = some Θ ↔ Δ = [] ∧ Θ = [] := by
+lemma List.zipWithExactM_nil_left_eq_some {Δ Θ : FEnv A} :
+    List.zipWithExactM f [] Δ = some Θ ↔ Δ = [] ∧ Θ = [] := by
   cases Δ <;> simp [eq_comm]
 
-lemma zipOp_nil_right_eq_some {Γ Θ : FEnv A} :
-    zipOp f Γ [] = some Θ ↔ Γ = [] ∧ Θ = [] := by
+lemma List.zipWithExactM_nil_right_eq_some {Γ Θ : FEnv A} :
+    List.zipWithExactM f Γ [] = some Θ ↔ Γ = [] ∧ Θ = [] := by
   cases Γ <;> simp [eq_comm]
 
-lemma zipOp_length {Γ Δ Θ : FEnv A} (h : zipOp f Γ Δ = some Θ) :
+lemma List.zipWithExactM_length {Γ Δ Θ : FEnv A} (h : List.zipWithExactM f Γ Δ = some Θ) :
     Γ.length = Δ.length ∧ Θ.length = Γ.length := by
   induction Γ generalizing Δ Θ with
-  | nil => rw [zipOp_nil_left_eq_some] at h; simp [h.1, h.2]
+  | nil => rw [List.zipWithExactM_nil_left_eq_some] at h; simp [h.1, h.2]
   | cons a Γ ih =>
     cases Δ with
     | nil => simp at h
     | cons b Δ =>
-      obtain ⟨c, Θ', -, h2, rfl⟩ := (zipOp_cons_cons_eq_some f).1 h
+      obtain ⟨c, Θ', -, h2, rfl⟩ := (List.zipWithExactM_cons_cons_eq_some f).1 h
       have := ih h2
       simp [this.1, this.2]
 
 /-- Componentwise characterization of the lifted operations. -/
-lemma zipOp_eq_some_iff {Γ Δ Θ : FEnv A} :
-    zipOp f Γ Δ = some Θ ↔
+lemma List.zipWithExactM_eq_some_iff {Γ Δ Θ : FEnv A} :
+    List.zipWithExactM f Γ Δ = some Θ ↔
       ∃ (h₁ : Γ.length = Δ.length) (h₂ : Θ.length = Γ.length),
         ∀ i (hi : i < Γ.length), f Γ[i] (Δ[i]'(h₁ ▸ hi)) = some (Θ[i]'(h₂ ▸ hi)) := by
   induction Γ generalizing Δ Θ with
   | nil =>
-    rw [zipOp_nil_left_eq_some]
+    rw [List.zipWithExactM_nil_left_eq_some]
     constructor
     · rintro ⟨rfl, rfl⟩; exact ⟨rfl, rfl, fun i hi => by simp at hi⟩
     · rintro ⟨h₁, h₂, -⟩
@@ -70,7 +70,7 @@ lemma zipOp_eq_some_iff {Γ Δ Θ : FEnv A} :
     cases Δ with
     | nil => simp
     | cons b Δ =>
-      rw [zipOp_cons_cons_eq_some]
+      rw [List.zipWithExactM_cons_cons_eq_some]
       constructor
       · rintro ⟨c, Θ', hc, hΘ', rfl⟩
         obtain ⟨h₁, h₂, h⟩ := ih.1 hΘ'
@@ -86,7 +86,7 @@ lemma zipOp_eq_some_iff {Γ Δ Θ : FEnv A} :
           refine ih.2 ⟨by simpa using h₁, by simpa using h₂, fun i hi => ?_⟩
           simpa using h (i + 1) (by simpa using hi)
 
-end zipOp
+end List.zipWithExactM
 
 /-- The paper's definition of the addition of fragmentary environments:
 `Γ + Δ` is defined (and equal to `Θ`) iff `|Γ + Δ| = |Γ| = |Δ|` and
@@ -95,7 +95,7 @@ theorem add_eq_some_iff {Γ Δ Θ : FEnv A} :
     add Γ Δ = some Θ ↔
       ∃ (h₁ : Γ.length = Δ.length) (h₂ : Θ.length = Γ.length),
         ∀ i (hi : i < Γ.length), QTy.add Γ[i] (Δ[i]'(h₁ ▸ hi)) = some (Θ[i]'(h₂ ▸ hi)) :=
-  zipOp_eq_some_iff _
+  List.zipWithExactM_eq_some_iff _
 
 /-- The paper's definition of the subtraction of fragmentary environments:
 `Γ - Δ` is defined (and equal to `Θ`) iff `|Γ - Δ| = |Γ| = |Δ|` and
@@ -104,7 +104,7 @@ theorem sub_eq_some_iff [DecidableEq A] {Γ Δ Θ : FEnv A} :
     sub Γ Δ = some Θ ↔
       ∃ (h₁ : Γ.length = Δ.length) (h₂ : Θ.length = Γ.length),
         ∀ i (hi : i < Γ.length), QTy.sub Γ[i] (Δ[i]'(h₁ ▸ hi)) = some (Θ[i]'(h₂ ▸ hi)) :=
-  zipOp_eq_some_iff _
+  List.zipWithExactM_eq_some_iff _
 
 end FEnv
 
@@ -178,44 +178,78 @@ theorem simpleEq_c {Γ Δ X L : FEnv A}
 
 end FEnv
 
+/-! ### Basic facts about `⊑` -/
+
+namespace QTy
+
+lemma le_refl (a : QTy A) : le a a := Or.inr rfl
+
+lemma le_trans {a b c : QTy A} (h₁ : le a b) (h₂ : le b c) : le a c := by
+  rcases h₁ with rfl | rfl
+  · exact Or.inl rfl
+  · exact h₂
+
+end QTy
+
+namespace FEnv
+
+lemma le_refl (Γ : FEnv A) : le Γ Γ := List.forall₂_same.2 fun a _ => QTy.le_refl a
+
+lemma le_trans {Γ Δ Θ : FEnv A} (h₁ : le Γ Δ) (h₂ : le Δ Θ) : le Γ Θ := by
+  unfold le at *
+  induction h₁ generalizing Θ with
+  | nil => cases h₂; exact List.Forall₂.nil
+  | cons hab _ ih =>
+    cases h₂ with
+    | cons hbc h => exact List.Forall₂.cons (QTy.le_trans hab hbc) (ih h)
+
+@[simp] lemma le_cons_cons {a b : QTy A} {Γ Δ : FEnv A} :
+    le (a :: Γ) (b :: Δ) ↔ QTy.le a b ∧ le Γ Δ := List.forall₂_cons
+
+lemma le_length {Γ Δ : FEnv A} (h : le Γ Δ) : Γ.length = Δ.length := List.Forall₂.length_eq h
+
+lemma le_nil_left {Δ : FEnv A} : le [] Δ ↔ Δ = [] := List.forall₂_nil_left_iff
+
+lemma le_nil_right {Γ : FEnv A} : le Γ [] ↔ Γ = [] := List.forall₂_nil_right_iff
+
+lemma le_cons_left {a : QTy A} {Γ Δ : FEnv A} (h : le (a :: Γ) Δ) :
+    ∃ b Δ', Δ = b :: Δ' ∧ QTy.le a b ∧ le Γ Δ' := by
+  cases Δ with
+  | nil => exact absurd (le_length h) (by simp)
+  | cons b Δ' => exact ⟨b, Δ', rfl, (le_cons_cons.1 h).1, (le_cons_cons.1 h).2⟩
+
+lemma le_cons_right {b : QTy A} {Γ Δ : FEnv A} (h : le Γ (b :: Δ)) :
+    ∃ a Γ', Γ = a :: Γ' ∧ QTy.le a b ∧ le Γ' Δ := by
+  cases Γ with
+  | nil => exact absurd (le_length h) (by simp)
+  | cons a Γ' => exact ⟨a, Γ', rfl, (le_cons_cons.1 h).1, (le_cons_cons.1 h).2⟩
+
+@[simp] lemma ofEnv_nil : ofEnv ([] : Env A) = [] := rfl
+
+@[simp] lemma ofEnv_cons (α : Ty A) (Γ : Env A) : ofEnv (α :: Γ) = some α :: ofEnv Γ := rfl
+
+@[simp] lemma length_ofEnv (Γ : Env A) : (ofEnv Γ).length = Γ.length := List.length_map _
+
+@[simp] lemma length_minenv (n : ℕ) : (minenv n : FEnv A).length = n := List.length_replicate
+
+lemma add_cons_cons_eq_some {a b : QTy A} {Γ Δ Θ : FEnv A} :
+    add (a :: Γ) (b :: Δ) = some Θ ↔
+      ∃ c Θ', QTy.add a b = some c ∧ add Γ Δ = some Θ' ∧ Θ = c :: Θ' :=
+  List.zipWithExactM_cons_cons_eq_some _
+
+lemma sub_cons_cons_eq_some [DecidableEq A] {a b : QTy A} {Γ Δ Θ : FEnv A} :
+    sub (a :: Γ) (b :: Δ) = some Θ ↔
+      ∃ c Θ', QTy.sub a b = some c ∧ sub Γ Δ = some Θ' ∧ Θ = c :: Θ' :=
+  List.zipWithExactM_cons_cons_eq_some _
+
+@[simp] lemma add_cons_cons_some_iff {a b c : QTy A} {Γ Δ Θ : FEnv A} :
+    add (a :: Γ) (b :: Δ) = some (c :: Θ) ↔ QTy.add a b = some c ∧ add Γ Δ = some Θ := by
+  rw [add_cons_cons_eq_some]; simp
+
+@[simp] lemma sub_cons_cons_some_iff [DecidableEq A] {a b c : QTy A} {Γ Δ Θ : FEnv A} :
+    sub (a :: Γ) (b :: Δ) = some (c :: Θ) ↔ QTy.sub a b = some c ∧ sub Γ Δ = some Θ := by
+  rw [sub_cons_cons_eq_some]; simp
+
+end FEnv
+
 end LinearDB
-
-namespace LinearDB.FEnv
-
-variable {A : Type*}
-
-/-- Lemma `envdefined` (a): if `Δ ⊑ Γ` and `Γ + Θ` is defined, then `Δ + Θ` is defined. -/
-theorem add_isSome_of_le {Γ Δ Θ : FEnv A} (h : le Δ Γ) (hΓ : (add Γ Θ).isSome) :
-    (add Δ Θ).isSome := by
-  unfold le at h
-  induction h generalizing Θ with
-  | nil => exact hΓ
-  | @cons d g Δ Γ hdg _ ih =>
-    cases Θ with
-    | nil => simp [add] at hΓ
-    | cons θ Θ =>
-      obtain ⟨X, hX⟩ := Option.isSome_iff_exists.1 hΓ
-      obtain ⟨c, X', hc, hX', rfl⟩ := (zipOp_cons_cons_eq_some _).1 hX
-      obtain ⟨Y, hY⟩ := Option.isSome_iff_exists.1 (ih (Θ := Θ) (by simp [add, hX']))
-      rcases hdg with rfl | rfl
-      · simp [add, zipOp, QTy.add, show zipOp QTy.add Δ Θ = some Y from hY]
-      · simp [add, zipOp, hc, show zipOp QTy.add Δ Θ = some Y from hY]
-
-/-- Lemma `envdefined` (b): if `Δ ⊑ Γ` and `Θ - Γ` is defined, then `Θ - Δ` is defined. -/
-theorem sub_isSome_of_le [DecidableEq A] {Γ Δ Θ : FEnv A} (h : le Δ Γ)
-    (hΓ : (sub Θ Γ).isSome) : (sub Θ Δ).isSome := by
-  unfold le at h
-  induction h generalizing Θ with
-  | nil => exact hΓ
-  | @cons d g Δ Γ hdg _ ih =>
-    cases Θ with
-    | nil => simp [sub] at hΓ
-    | cons θ Θ =>
-      obtain ⟨X, hX⟩ := Option.isSome_iff_exists.1 hΓ
-      obtain ⟨c, X', hc, hX', rfl⟩ := (zipOp_cons_cons_eq_some _).1 hX
-      obtain ⟨Y, hY⟩ := Option.isSome_iff_exists.1 (ih (Θ := Θ) (by simp [sub, hX']))
-      rcases hdg with rfl | rfl
-      · cases θ <;> simp [sub, zipOp, QTy.sub, show zipOp QTy.sub Θ Δ = some Y from hY]
-      · simp [sub, zipOp, hc, show zipOp QTy.sub Θ Δ = some Y from hY]
-
-end LinearDB.FEnv

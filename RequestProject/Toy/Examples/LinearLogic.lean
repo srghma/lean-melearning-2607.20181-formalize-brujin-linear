@@ -1,7 +1,7 @@
 module
 
-public import RequestProject.Toy.LinearLogic2
-public import RequestProject.Toy.Examples
+public import RequestProject.Toy.LinearLogic.LinearLogic2
+public import RequestProject.Toy.Examples.Basic
 
 @[expose] public section
 
@@ -10,9 +10,9 @@ set_option autoImplicit false
 /-!
 # Examples for `ToyLinearLogic` and `ToyLinearLogic2`
 
-The A-normal program `lenSuccA` of `Toy/Examples.lean`,
+The A-normal program `lenSuccA` of `Toy/Examples/Basic.lean`,
 `λs. let n := length s; let f := add n; let r := f 1; r : string ⊸ nat`,
-read as a proof in both linear-logic calculi.  The constants of `Toy/Examples.lean` are
+read as a proof in both linear-logic calculi.  The constants of `Toy/Examples/Basic.lean` are
 infinitely many (one per literal) but have only six types; these six formulas, as
 `!`-hypotheses, are the reusable hypotheses `!Θ` from which every constant follows.
 -/
@@ -23,7 +23,7 @@ namespace Toy
 
 open ToyLinearLogic ToyLinearLogic2
 
-/-- The types of the constants of `Toy/Examples.lean`, as formulas. -/
+/-- The types of the constants of `Toy/Examples/Basic.lean`, as formulas. -/
 def constFmls : List (Fml Base) :=
   [LTy.nat.toFml, LTy.bool.toFml, LTy.string.toFml, (LTy.fn .nat (.fn .nat .nat)).toFml,
     (LTy.fn .bool .bool).toFml, (LTy.fn .string .nat).toFml]

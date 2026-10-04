@@ -1,7 +1,8 @@
 module
 
-public import RequestProject.Typing
-public import RequestProject.FEnvLemmas
+public import RequestProject.Sec2SimplyTyped.Typing
+public import RequestProject.Sec4LinearTyping.Typing
+public import RequestProject.Sec4LinearTyping.EnvDefined
 
 /-!
 # Properties of the typing system for the linear λ-calculus (Section 4 of the paper)
@@ -22,118 +23,6 @@ namespace LinearDB
 open Term
 
 variable {A C : Type*}
-
-/-! ### Basic facts about `⊑` -/
-
-namespace QTy
-
-lemma le_refl (a : QTy A) : le a a := Or.inr rfl
-
-lemma le_trans {a b c : QTy A} (h₁ : le a b) (h₂ : le b c) : le a c := by
-  rcases h₁ with rfl | rfl
-  · exact Or.inl rfl
-  · exact h₂
-
-end QTy
-
-namespace FEnv
-
-lemma le_refl (Γ : FEnv A) : le Γ Γ := List.forall₂_same.2 fun a _ => QTy.le_refl a
-
-lemma le_trans {Γ Δ Θ : FEnv A} (h₁ : le Γ Δ) (h₂ : le Δ Θ) : le Γ Θ := by
-  unfold le at *
-  induction h₁ generalizing Θ with
-  | nil => cases h₂; exact List.Forall₂.nil
-  | cons hab _ ih =>
-    cases h₂ with
-    | cons hbc h => exact List.Forall₂.cons (QTy.le_trans hab hbc) (ih h)
-
-@[simp] lemma le_cons_cons {a b : QTy A} {Γ Δ : FEnv A} :
-    le (a :: Γ) (b :: Δ) ↔ QTy.le a b ∧ le Γ Δ := List.forall₂_cons
-
-lemma le_length {Γ Δ : FEnv A} (h : le Γ Δ) : Γ.length = Δ.length := List.Forall₂.length_eq h
-
-lemma le_nil_left {Δ : FEnv A} : le [] Δ ↔ Δ = [] := List.forall₂_nil_left_iff
-
-lemma le_nil_right {Γ : FEnv A} : le Γ [] ↔ Γ = [] := List.forall₂_nil_right_iff
-
-lemma le_cons_left {a : QTy A} {Γ Δ : FEnv A} (h : le (a :: Γ) Δ) :
-    ∃ b Δ', Δ = b :: Δ' ∧ QTy.le a b ∧ le Γ Δ' := by
-  cases Δ with
-  | nil => exact absurd (le_length h) (by simp)
-  | cons b Δ' => exact ⟨b, Δ', rfl, (le_cons_cons.1 h).1, (le_cons_cons.1 h).2⟩
-
-lemma le_cons_right {b : QTy A} {Γ Δ : FEnv A} (h : le Γ (b :: Δ)) :
-    ∃ a Γ', Γ = a :: Γ' ∧ QTy.le a b ∧ le Γ' Δ := by
-  cases Γ with
-  | nil => exact absurd (le_length h) (by simp)
-  | cons a Γ' => exact ⟨a, Γ', rfl, (le_cons_cons.1 h).1, (le_cons_cons.1 h).2⟩
-
-@[simp] lemma ofEnv_nil : ofEnv ([] : Env A) = [] := rfl
-
-@[simp] lemma ofEnv_cons (α : Ty A) (Γ : Env A) : ofEnv (α :: Γ) = some α :: ofEnv Γ := rfl
-
-@[simp] lemma length_ofEnv (Γ : Env A) : (ofEnv Γ).length = Γ.length := List.length_map _
-
-@[simp] lemma length_minenv (n : ℕ) : (minenv n : FEnv A).length = n := List.length_replicate
-
-lemma add_cons_cons_eq_some {a b : QTy A} {Γ Δ Θ : FEnv A} :
-    add (a :: Γ) (b :: Δ) = some Θ ↔
-      ∃ c Θ', QTy.add a b = some c ∧ add Γ Δ = some Θ' ∧ Θ = c :: Θ' :=
-  zipOp_cons_cons_eq_some _
-
-lemma sub_cons_cons_eq_some [DecidableEq A] {a b : QTy A} {Γ Δ Θ : FEnv A} :
-    sub (a :: Γ) (b :: Δ) = some Θ ↔
-      ∃ c Θ', QTy.sub a b = some c ∧ sub Γ Δ = some Θ' ∧ Θ = c :: Θ' :=
-  zipOp_cons_cons_eq_some _
-
-@[simp] lemma add_cons_cons_some_iff {a b c : QTy A} {Γ Δ Θ : FEnv A} :
-    add (a :: Γ) (b :: Δ) = some (c :: Θ) ↔ QTy.add a b = some c ∧ add Γ Δ = some Θ := by
-  rw [add_cons_cons_eq_some]; simp
-
-@[simp] lemma sub_cons_cons_some_iff [DecidableEq A] {a b c : QTy A} {Γ Δ Θ : FEnv A} :
-    sub (a :: Γ) (b :: Δ) = some (c :: Θ) ↔ QTy.sub a b = some c ∧ sub Γ Δ = some Θ := by
-  rw [sub_cons_cons_eq_some]; simp
-
-end FEnv
-
-/-! ### Subterms of quasi-linear terms -/
-
-namespace Term
-
-lemma occ_var (i j : ℕ) : occ i (var j : Term C) = if i = j then 1 else 0 := rfl
-
-lemma not_isSubterm_lam_var {u : Term C} {j : ℕ} : ¬ IsSubterm (lam u) (var j) := by
-  intro h; cases h
-
-lemma not_isSubterm_lam_const {u : Term C} {c : C} : ¬ IsSubterm (lam u) (const c) := by
-  intro h; cases h
-
-lemma QuasiLinear.app_left {t u : Term C} (h : QuasiLinear (app t u)) : QuasiLinear t := by
-  refine ⟨fun v hv => h.1 v (IsSubterm.appL _ hv), fun i hi => ?_⟩
-  have := h.2 i (by simp only [fv, Set.mem_setOf_eq, occ] at hi ⊢; omega)
-  simp only [fv, Set.mem_setOf_eq, occ] at hi this; omega
-
-lemma QuasiLinear.app_right {t u : Term C} (h : QuasiLinear (app t u)) : QuasiLinear u := by
-  refine ⟨fun v hv => h.1 v (IsSubterm.appR _ hv), fun i hi => ?_⟩
-  have := h.2 i (by simp only [fv, Set.mem_setOf_eq, occ] at hi ⊢; omega)
-  simp only [fv, Set.mem_setOf_eq, occ] at hi this; omega
-
-lemma QuasiLinear.occ_zero_of_lam {t : Term C} (h : QuasiLinear (lam t)) : occ 0 t = 1 :=
-  h.1 t (IsSubterm.refl _)
-
-lemma QuasiLinear.of_lam {t : Term C} (h : QuasiLinear (lam t)) : QuasiLinear t := by
-  refine ⟨fun v hv => h.1 v (IsSubterm.lam hv), fun i hi => ?_⟩
-  rcases i with _ | i
-  · exact h.occ_zero_of_lam
-  · exact h.2 i hi
-
-lemma quasiLinear_var (j : ℕ) : QuasiLinear (var j : Term C) := by
-  refine ⟨fun u hu => absurd hu not_isSubterm_lam_var, fun i hi => ?_⟩
-  simp only [fv, Set.mem_setOf_eq, occ] at hi ⊢
-  split_ifs at hi ⊢ <;> simp_all
-
-end Term
 
 /-! ### Lemma `subeq` -/
 

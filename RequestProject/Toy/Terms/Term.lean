@@ -1,7 +1,7 @@
 module
 
-public import RequestProject.Toy.Ty
-public import RequestProject.SubjectReduction
+public import RequestProject.Toy.Types.Ty
+public import RequestProject.Sec6SubjectReduction.SubjectReduction
 
 @[expose] public section
 

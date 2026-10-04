@@ -1,6 +1,7 @@
 module
 
-public import RequestProject.LL
+public import RequestProject.Sec3FragmentaryEnv.Typing
+public import RequestProject.Sec3FragmentaryEnv.FEnvLemmas
 
 /-!
 # The typing system with fragmentary environments (Section 3 of the paper)
@@ -27,7 +28,7 @@ lemma add_getElem? {Γ Δ Θ : FEnv A} (h : add Γ Δ = some Θ) (i : ℕ) :
       (Γ[i]? = none ∧ Δ[i]? = none ∧ Θ[i]? = none) := by
   induction Γ generalizing Δ Θ i with
   | nil =>
-    obtain ⟨rfl, rfl⟩ := (zipOp_nil_left_eq_some _).1 h
+    obtain ⟨rfl, rfl⟩ := (List.zipWithExactM_nil_left_eq_some _).1 h
     simp
   | cons a Γ ih =>
     rcases Δ with _ | ⟨b, Δ⟩
@@ -42,7 +43,7 @@ lemma le_of_add {Γ Δ Θ X : FEnv A} (hΓ : le Γ X) (hΔ : le Δ X) (h : add �
   unfold le at hΓ
   induction hΓ generalizing Δ Θ with
   | nil =>
-    obtain ⟨rfl, rfl⟩ := (zipOp_nil_left_eq_some _).1 h
+    obtain ⟨rfl, rfl⟩ := (List.zipWithExactM_nil_left_eq_some _).1 h
     exact List.Forall₂.nil
   | @cons a x Γ X hax _ ih =>
     obtain ⟨b, Δ', rfl, hb, hΔ'⟩ := le_cons_right hΔ
@@ -53,7 +54,7 @@ lemma le_of_add {Γ Δ Θ X : FEnv A} (hΓ : le Γ X) (hΔ : le Δ X) (h : add �
 lemma le_add_left {Γ Δ Θ : FEnv A} (h : add Γ Δ = some Θ) : le Γ Θ := by
   induction Γ generalizing Δ Θ with
   | nil =>
-    obtain ⟨rfl, rfl⟩ := (zipOp_nil_left_eq_some _).1 h
+    obtain ⟨rfl, rfl⟩ := (List.zipWithExactM_nil_left_eq_some _).1 h
     exact List.Forall₂.nil
   | cons a Γ ih =>
     rcases Δ with _ | ⟨b, Δ⟩
@@ -66,7 +67,7 @@ lemma le_add_left {Γ Δ Θ : FEnv A} (h : add Γ Δ = some Θ) : le Γ Θ := by
 lemma le_add_right {Γ Δ Θ : FEnv A} (h : add Γ Δ = some Θ) : le Δ Θ := by
   induction Γ generalizing Δ Θ with
   | nil =>
-    obtain ⟨rfl, rfl⟩ := (zipOp_nil_left_eq_some _).1 h
+    obtain ⟨rfl, rfl⟩ := (List.zipWithExactM_nil_left_eq_some _).1 h
     exact List.Forall₂.nil
   | cons a Γ ih =>
     rcases Δ with _ | ⟨b, Δ⟩

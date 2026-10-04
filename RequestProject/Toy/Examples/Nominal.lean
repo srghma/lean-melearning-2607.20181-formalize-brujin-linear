@@ -1,6 +1,6 @@
 module
 
-public import RequestProject.Toy.NominalTerm
+public import RequestProject.Toy.Terms.NominalTerm
 
 @[expose] public section
 

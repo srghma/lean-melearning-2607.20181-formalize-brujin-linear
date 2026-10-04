@@ -1,6 +1,6 @@
 module
 
-public import RequestProject.Toy.Term
+public import RequestProject.Toy.Terms.Term
 
 @[expose] public section
 

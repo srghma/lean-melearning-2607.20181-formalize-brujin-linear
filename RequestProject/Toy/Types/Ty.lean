@@ -1,6 +1,6 @@
 module
 
-public import RequestProject.Syntax
+public import RequestProject.Sec2SimplyTyped.Syntax
 
 @[expose] public section
 

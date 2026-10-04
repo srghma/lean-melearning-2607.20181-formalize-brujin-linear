@@ -1,6 +1,6 @@
 module
 
-public import RequestProject.Inversion
+public import RequestProject.Sec6SubjectReduction.Inversion
 
 /-!
 # Subject reduction (Section 6 of the paper)
@@ -230,9 +230,9 @@ theorem LLTyped.subst_lemma {u : Term C} {β : Ty A} :
       have hsub : FEnv.sub (Δ₂ ++ Δ₁) (FEnv.minenv i ++ Y) = some (Δ₂ ++ R) := by
         have := FEnv.sub_minenv Δ₂
         rw [hΔ] at this
-        exact FEnv.zipOp_append this hR
+        exact FEnv.List.zipWithExactM_append this hR
       obtain ⟨G, hG, p₂'⟩ := p₂.sub_env hsub
-      obtain ⟨G₂, G₁, rfl, hG₂, hG₁⟩ := FEnv.zipOp_append_inv hG (by simp [hΞ])
+      obtain ⟨G₂, G₁, rfl, hG₂, hG₁⟩ := FEnv.List.zipWithExactM_append_inv hG (by simp [hΞ])
       have hG₂' := FEnv.sub_minenv Ξ₂
       rw [hΞ] at hG₂'
       have : G₂ = Ξ₂ := Option.some.inj (hG₂.symm.trans hG₂')

@@ -1,9 +1,11 @@
 module
 
-public import RequestProject.Syntax
+public import RequestProject.Sec2SimplyTyped.Typing
 
 /-!
-# Typing environments and fragmentary environments (Sections 2 and 3 of the paper)
+# Fragmentary environments (Section 3 of the paper)
+
+Typing environments `Env` are defined in `Sec2SimplyTyped/Typing.lean`.
 
 **Convention.** The paper writes environments left to right and numbers their components from
 right to left, so that `Γ(0)` is the rightmost component and `Γ, α` extends `Γ` on the right.
@@ -19,16 +21,6 @@ The partial operations of addition and subtraction are modelled as functions ret
 
 @[expose] public section
 
-
--- set_option pp.all false
---
--- variable {α : Type*} [Preorder α] (s : Set α)
---
--- set_option pp.notation false
--- set_option pp.raw false
---
--- #reduce ({x : α | ∀ ⦃a : α⦄, a ∈ s → x ≤ a})
-
 /-- Zips two lists with a partial operation `f`.
     Succeeds iff both lists have the exact same length and `f` succeeds at every element. -/
 def List.zipWithExactM {m : Type u → Type u} [Monad m] [Alternative m]
@@ -43,9 +35,6 @@ def List.zipWithExactM {m : Type u → Type u} [Monad m] [Alternative m]
 namespace LinearDB
 
 variable {A : Type*}
-
-/-- Typing environments: finite sequences of simple types (head = component `0`). -/
-abbrev Env (A : Type*) := List (Ty A)
 
 /-- Quasi-types `qty = ty ∪ {⊥}`; `none` is `⊥`. -/
 abbrev QTy (A : Type*) := Option (Ty A)

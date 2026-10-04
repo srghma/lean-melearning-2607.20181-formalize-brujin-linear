@@ -1,7 +1,7 @@
 module
 
-public import RequestProject.Toy.Examples
-public import RequestProject.Toy.Open
+public import RequestProject.Toy.Examples.Basic
+public import RequestProject.Toy.Terms.Open
 
 @[expose] public section
 

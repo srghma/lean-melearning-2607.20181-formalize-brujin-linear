@@ -1,6 +1,6 @@
 module
 
-public import RequestProject.Toy.LinearLogic
+public import RequestProject.Toy.LinearLogic.LinearLogic
 
 @[expose] public section
 
@@ -9,7 +9,7 @@ set_option autoImplicit false
 /-!
 # ToyLinearLogic2: classical linear logic with Hodas–Miller input / output contexts
 
-The same sequent calculus as `ToyLinearLogic` (`Toy/LinearLogic.lean`), presented with the
+The same sequent calculus as `ToyLinearLogic` (`Toy/LinearLogic/LinearLogic.lean`), presented with the
 resource management of the paper's judgement `{Γ} t : α {Δ}` (Hodas–Miller style): a
 derivation `t : IO Γ Δ`, written `{Γ} t {Δ}`, receives an **input** environment `Γ` of slots
 and returns an **output** environment `Δ`, the slots it has not used.
@@ -36,7 +36,7 @@ Results:
   whenever `Δ₀ ⊑ Γ₀` and the resources used between them are `Γ ⊢ Ψ`, in any order;
 * hence the two calculi prove the same sequents (`derivable_iff_io`);
 * the paper's judgement carries over: every typed A-normal statement
-  `{Γ} s : α {Δ}` (`Toy/Anf.lean`) gives `{Γ, !Θ} t : ⟦α⟧ {Δ, ⊥…⊥}` here, the environments
+  `{Γ} s : α {Δ}` (`Toy/Terms/Anf.lean`) gives `{Γ, !Θ} t : ⟦α⟧ {Δ, ⊥…⊥}` here, the environments
   `Γ`, `Δ` being read as hypotheses and `!Θ` being `!`-hypotheses from which the constants
   follow (`Stmt.toIO`).
 -/
@@ -631,7 +631,7 @@ def hyps (Γ : FEnv A) : REnv A := Γ.map (Option.map fun α => .L α.toFml)
 def bangHyps (Θ : List (Fml A)) : REnv A := Θ.map fun a => some (.L (.bang a))
 
 /-- **Typed A-normal statements give Hodas–Miller derivations.** A statement
-    `{Γ} s : α {Δ}` of `Toy/Anf.lean` gives `{Γ, !Θ} t : ⟦α⟧ {Δ, ⊥…⊥}`, with the same
+    `{Γ} s : α {Δ}` of `Toy/Terms/Anf.lean` gives `{Γ, !Θ} t : ⟦α⟧ {Δ, ⊥…⊥}`, with the same
     environments read as hypotheses, when the constants' types follow from `!Θ`. -/
 theorem _root_.LinearDB.Toy.Stmt.toIO {Θ : List (Fml A)}
     (κ : ∀ c, Derivable (bangs Θ) [(τ c).toFml]) {Γ Δ : FEnv A} {α : Ty A}

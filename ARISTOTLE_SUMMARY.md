@@ -1,3 +1,44 @@
+# Summary of changes for run a45a2c14-2409-49a9-aeba-3c4920e8da87
+I grouped the project's files into directories: paper material by the section of `LSFA9.tex` it formalizes, and the toy material (not part of the paper) by topic. The whole project rebuilds with no errors, no warnings and no `sorry`. No theorem statements or proofs changed. The only code edits are moving declarations between files and updating `import` lines and file headers.
+
+**Paper sections (`RequestProject/`)**
+- `Sec2SimplyTyped/` (§2)
+  - `Syntax.lean`: types, terms, `occ`, `fv`, subterms, quasi-linear and linear terms.
+  - `Typing.lean`: environments `Env` and the Fig. 2 system `STTyped`.
+  - `Examples.lean`: the (tjdb1)/(tjdb2) examples.
+- `Sec3FragmentaryEnv/` (§3)
+  - `FEnv.lean`: quasi-types and fragmentary environments.
+  - `FEnvLemmas.lean`: Lemmas `qtSimpleEq` and `envSimpleEq`, plus basic facts about `⊑`.
+  - `Typing.lean`: the Fig. 3 system `FLLTyped`.
+  - `FLL.lean`: the occurrence lemma, `fst2fll` and `fll2fst`.
+  - `Examples.lean`: the (exappf) example.
+- `Sec4LinearTyping/` (§4)
+  - `Typing.lean`: the Fig. 4 system `LLTyped`, plus `Compatible` and `Minimal`.
+  - `LL.lean`: `subeq`, quasi-linearity, `ll2st`, `st2ll`, the characterization of linear terms, and `envarith`.
+  - `EnvDefined.lean`: Lemma `envdefined`.
+  - `Examples.lean`: the (ex2dbn) example.
+- `Sec5BetaReduction/Beta.lean` (§5): lifting, substitution, β-contraction and β-reduction.
+- `Sec6SubjectReduction/` (§6)
+  - `Inversion.lean`: inversion lemmas.
+  - `SubjectReduction.lean`: `l3`, `philippe`, `sr`, and subject reduction (single and multi-step).
+
+Three old files each mixed several sections, so I split them along section lines:
+- `Syntax.lean`: §2 and §5.
+- `Typing.lean`: Figures 2, 3 and 4.
+- `Examples.lean`: examples from §2, §3 and §4.
+
+I also moved some lemmas so that no section depends on a later one. The `⊑`/environment facts and the quasi-linear subterm facts that §3 needs used to sit in the §4 file. They now live in §3 and §2.
+
+**Toy material, by topic (`RequestProject/Toy/`)**
+- `Types/`: `Ty`, `Nominal`.
+- `Terms/`: `Term`, `Anf`, `Open`, `NominalTerm`.
+- `LinearLogic/`: `Resource`, `LinearLogic`, `LinearLogic2`.
+- `Examples/`: `Basic` (formerly `Examples`), `Open`, `Nominal`, `LinearLogic`. These were formerly `OpenExamples`, `NominalExamples` and `LinearLogicExamples`.
+
+File references inside the docstrings now use the new paths. `Main.lean`, a standalone settings file, stays at the top level. I added a "Layout" section to `README.md` with this table.
+
+I updated the file locations in the Properties table for each entry I could match to a moved file. I could not read the full table, so a few toy entries may still point to their old paths; their descriptions may also mention old paths. Every theorem is still proved under its old name.
+
 # Summary of changes for run f259818d-b495-4f41-866b-f6cecb599dde
 I added ToyLinearLogic and ToyLinearLogic2 in four new files under `RequestProject/Toy/`. The whole project builds with no `sorry` and no warnings. The main theorems use only Lean's standard axioms. The earlier files are unchanged.
 
